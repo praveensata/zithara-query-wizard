@@ -1,42 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import ChatInterface from '@/components/Chat/ChatInterface';
 import Navbar from '@/components/Layout/Navbar';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
 
 const ChatPage: React.FC = () => {
   const { currentUser } = useAuth();
-  const [apiKey, setApiKey] = useState<string>("");
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    // This is just a placeholder - in a real application, you'd load from environment variables
-    // or Supabase secrets, not localStorage. But for demo purposes:
-    const savedApiKey = localStorage.getItem('geminiApiKey');
-    if (savedApiKey) {
-      setApiKey(savedApiKey);
-    } else {
-      // For demo purposes, set a placeholder key
-      setApiKey("YOUR_API_KEY");
-    }
-  }, []);
-
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newKey = e.target.value;
-    setApiKey(newKey);
-    localStorage.setItem('geminiApiKey', newKey);
-    
-    toast({
-      title: "API Key Updated",
-      description: "Your Gemini API key has been saved."
-    });
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -71,32 +44,14 @@ const ChatPage: React.FC = () => {
             <div className="md:col-span-2 h-full">
               <Card className="h-full">
                 <CardContent className="p-0 h-full">
-                  <ChatInterface apiKey={apiKey} />
+                  <ChatInterface />
                 </CardContent>
               </Card>
             </div>
             <div className="md:col-span-1">
               <Card className="h-full">
                 <CardContent className="p-6 h-full flex flex-col">
-                  <h3 className="text-xl font-bold mb-4">Settings</h3>
-                  
-                  <div className="space-y-4 mb-6">
-                    <div>
-                      <label htmlFor="apiKey" className="block text-sm font-medium mb-1">
-                        Gemini API Key
-                      </label>
-                      <Input
-                        id="apiKey"
-                        type="password"
-                        placeholder="Enter your Gemini API key"
-                        value={apiKey}
-                        onChange={handleApiKeyChange}
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Your API key is stored locally and never sent to our servers.
-                      </p>
-                    </div>
-                  </div>
+                  <h3 className="text-xl font-bold mb-4">Zithara AI Assistant</h3>
                   
                   <div className="mt-auto">
                     <h4 className="font-medium mb-2">Quick Tips</h4>

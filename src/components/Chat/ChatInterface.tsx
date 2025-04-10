@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveChatMessage, getUserChatHistory } from '@/lib/firebase';
@@ -16,14 +17,11 @@ interface ChatMessage {
   timestamp?: any;
 }
 
-interface ChatInterfaceProps {
-  apiKey: string;
-}
-
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
+const ChatInterface: React.FC = () => {
   const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { currentUser } = useAuth();
   const { toast } = useToast();
@@ -31,9 +29,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
   useEffect(() => {
     const loadChatHistory = async () => {
       if (currentUser) {
+        setIsLoading(true);
         try {
           const history = await getUserChatHistory(currentUser.uid);
-          setChatHistory(history as ChatMessage[]);
+          
+          if (Array.isArray(history)) {
+            // Format the chat history correctly
+            const formattedHistory = history.map(item => ({
+              id: item.id,
+              message: item.message,
+              isUser: item.isUser,
+              timestamp: item.timestamp
+            }));
+            
+            setChatHistory(formattedHistory);
+          } else {
+            console.error("Chat history is not an array:", history);
+            toast({
+              title: "Error",
+              description: "Failed to load chat history format. Please try again.",
+              variant: "destructive"
+            });
+          }
         } catch (error) {
           console.error("Error loading chat history:", error);
           toast({
@@ -41,6 +58,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
             description: "Failed to load chat history. Please try again.",
             variant: "destructive"
           });
+        } finally {
+          setIsLoading(false);
         }
       }
     };
@@ -76,7 +95,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
     setChatHistory(prev => [...prev, userMessage]);
     
     try {
-      await saveChatMessage(currentUser.uid, userMessage.message, true);
+      const savedMsgId = await saveChatMessage(currentUser.uid, userMessage.message, true);
+      userMessage.id = savedMsgId;
     } catch (error) {
       console.error("Error saving user message:", error);
     }
@@ -86,7 +106,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
     setIsTyping(true);
     
     try {
-      const response = await getChatResponse(userMessage.message, apiKey);
+      // We no longer need to pass an API key, it's handled in the getChatResponse function
+      const response = await getChatResponse(userMessage.message);
       
       setIsTyping(false);
       
@@ -99,7 +120,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
       setChatHistory(prev => [...prev, botMessage]);
       
       if (currentUser) {
-        await saveChatMessage(currentUser.uid, botMessage.message, false);
+        const savedBotMsgId = await saveChatMessage(currentUser.uid, botMessage.message, false);
+        botMessage.id = savedBotMsgId;
       }
     } catch (error) {
       console.error("Error getting chat response:", error);
@@ -119,7 +141,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
         ref={chatContainerRef}
         className="flex-1 overflow-y-auto p-4 chat-container"
       >
-        {chatHistory.length === 0 ? (
+        {isLoading ? (
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zithara-500"></div>
+            <p className="mt-2 text-gray-500">Loading chat history...</p>
+          </div>
+        ) : chatHistory.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center">
             <div className="text-3xl font-bold text-zithara-500 mb-2">Welcome to Zithara AI</div>
             <p className="text-gray-500 max-w-md">

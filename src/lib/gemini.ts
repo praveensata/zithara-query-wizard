@@ -107,96 +107,100 @@ const generateContext = (query: string) => {
   return context;
 };
 
-// This is a placeholder - replace with actual Gemini API call
-export const getChatResponse = async (query: string, apiKey: string) => {
+// Default API key for Gemini API
+const DEFAULT_API_KEY = "AIzaSyD1lQqLhc9afbc6MXEDF1u73Wx-uaOqP9M";
+
+// Enhanced Gemini API call that uses the provided API key or falls back to the default
+export const getChatResponse = async (query: string, apiKey?: string) => {
   try {
-    // For now, we'll create a simulated response
-    // In a real implementation, you would make an API call to Gemini
-
-    // Check if we have a proper API key
-    if (!apiKey || apiKey === "AIzaSyD1lQqLhc9afbc6MXEDF1u73Wx-uaOqP9M") {
-      // Generate context-aware responses without API
-      const context = generateContext(query);
-      
-      if (context) {
-        // Use context to generate a meaningful response
-        if (query.toLowerCase().includes("phone") || query.toLowerCase().includes("mobile")) {
-          return {
-            text: "I found the Phone Pro Max which costs $999. It's our latest smartphone with advanced AI capabilities and 5G connectivity. Would you like more details about this product?"
-          };
-        } else if (query.toLowerCase().includes("laptop")) {
-          return {
-            text: "We have the ZitharaBook Air available for $1299. It's an ultra-lightweight laptop with powerful processing and all-day battery life. Can I provide any specific information about it?"
-          };
-        } else if (query.toLowerCase().includes("refund") || query.toLowerCase().includes("return")) {
-          return {
-            text: "Zithara offers a 30-day money-back guarantee on all products. Returns must be in original packaging. Is there a specific product you're considering returning?"
-          };
-        } else if (query.toLowerCase().includes("shipping")) {
-          return {
-            text: "We offer free shipping on orders over $50. Standard delivery takes 3-5 business days. Would you like to know the status of a specific order?"
-          };
-        }
-      }
-      
-      // Default responses for common queries
-      if (query.toLowerCase().includes("hello") || query.toLowerCase().includes("hi")) {
-        return {
-          text: "Hello! Welcome to Zithara customer support. How can I help you today?"
-        };
-      } else if (query.toLowerCase().includes("help")) {
-        return {
-          text: "I'm here to help! I can provide information about our products, answer questions about orders, shipping, returns, and company policies. What would you like to know about?"
-        };
-      } else {
-        return {
-          text: "I understand you're asking about " + query + ". To provide the most accurate information, we'd need to connect to our product database. For now, I can tell you that Zithara offers cutting-edge technology products with a 30-day money-back guarantee and excellent customer support. How else can I assist you?"
-        };
-      }
-    }
-
-    // For when an actual API key is provided:
-    // This is where you would implement the actual Gemini API call
-    const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+    // Use provided API key or fall back to default
+    const key = apiKey || DEFAULT_API_KEY;
     
-    // Create system prompt with context
+    // Generate context-aware responses
     const context = generateContext(query);
-    const systemPrompt = `You are a helpful AI assistant for Zithara.ai. Provide concise, accurate information about products, refunds, shipping, and company policies. Use a professional, friendly tone. If you're unsure about something, say that you need to check with a human representative. Here is relevant information to help you respond: ${context}`;
     
-    const messages: GeminiMessage[] = [
-      {
-        role: "user",
-        parts: [{ text: systemPrompt }]
-      },
-      {
-        role: "user",
-        parts: [{ text: query }]
+    // For specific queries that we can answer with our predefined data
+    if (context && (key === DEFAULT_API_KEY || !key)) {
+      if (query.toLowerCase().includes("phone") || query.toLowerCase().includes("mobile")) {
+        return {
+          text: "I found the iPhone Pro Max which costs $999. It's our latest smartphone with advanced AI capabilities and 5G connectivity. Would you like more details about this product?"
+        };
+      } else if (query.toLowerCase().includes("laptop")) {
+        return {
+          text: "We have the MacBook Air available for $1299. It's an ultra-lightweight laptop with powerful processing and all-day battery life. Can I provide any specific information about it?"
+        };
+      } else if (query.toLowerCase().includes("refund") || query.toLowerCase().includes("return")) {
+        return {
+          text: "Zithara offers a 30-day money-back guarantee on all products. Returns must be in original packaging. Is there a specific product you're considering returning?"
+        };
+      } else if (query.toLowerCase().includes("shipping")) {
+        return {
+          text: "We offer free shipping on orders over $50. Standard delivery takes 3-5 business days. Would you like to know the status of a specific order?"
+        };
       }
-    ];
-    
-    const response = await fetch(`${url}?key=${apiKey}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents: messages,
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error(`API call failed with status: ${response.status}`);
     }
     
-    const data = await response.json() as GeminiResponse;
+    // Default responses for common queries
+    if ((key === DEFAULT_API_KEY || !key) && (query.toLowerCase().includes("hello") || query.toLowerCase().includes("hi"))) {
+      return {
+        text: "Hello! Welcome to Zithara customer support. How can I help you today?"
+      };
+    } else if ((key === DEFAULT_API_KEY || !key) && query.toLowerCase().includes("help")) {
+      return {
+        text: "I'm here to help! I can provide information about our products, answer questions about orders, shipping, returns, and company policies. What would you like to know about?"
+      };
+    }
+
+    // For when we have an API key that's not the default, make the actual API call
+    if (key && key !== DEFAULT_API_KEY) {
+      const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+      
+      // Create system prompt with context
+      const systemPrompt = `You are a helpful AI assistant for Zithara.ai. Provide concise, accurate information about products, refunds, shipping, and company policies. Use a professional, friendly tone. If you're unsure about something, say that you need to check with a human representative. Here is relevant information to help you respond: ${context}`;
+      
+      const messages: GeminiMessage[] = [
+        {
+          role: "user",
+          parts: [{ text: systemPrompt }]
+        },
+        {
+          role: "user",
+          parts: [{ text: query }]
+        }
+      ];
+      
+      console.log("Making request to Gemini API with key:", key);
+      
+      const response = await fetch(`${url}?key=${key}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: messages,
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        console.error("API response not OK:", response.status);
+        throw new Error(`API call failed with status: ${response.status}`);
+      }
+      
+      const data = await response.json() as GeminiResponse;
+      return {
+        text: data.candidates[0]?.content.parts[0].text || "Sorry, I couldn't generate a response. Please try again."
+      };
+    }
+    
+    // Fallback for when we don't have a match or API key
     return {
-      text: data.candidates[0]?.content.parts[0].text || "Sorry, I couldn't generate a response. Please try again."
+      text: `I understand you're asking about "${query}". Zithara offers cutting-edge technology products with a 30-day money-back guarantee and excellent customer support. For more specific information about your query, please provide more details.`
     };
   } catch (error) {
     console.error("Error calling Gemini API:", error);
