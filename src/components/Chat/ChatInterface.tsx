@@ -6,7 +6,7 @@ import { getChatResponse } from '@/lib/gemini';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send } from 'lucide-react';
+import { Send, Sparkles } from 'lucide-react';
 import ChatMessageImproved from './ChatMessageImproved';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -151,14 +151,14 @@ const ChatInterface: React.FC = () => {
       >
         {isLoading ? (
           <div className="h-full flex flex-col items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-zithara-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             <p className="mt-2 text-gray-500">Loading chat history...</p>
           </div>
         ) : chatHistory.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center">
-            <div className="text-3xl font-bold text-zithara-500 mb-2">Welcome to Zithara AI</div>
+            <div className="text-3xl font-bold text-blue-500 mb-2">AI Assistant</div>
             <p className="text-gray-500 max-w-md">
-              Ask me anything about our products, order status, shipping, returns, or company policies.
+              Ask me anything! I'm here to help with your questions and provide information on any topic.
             </p>
           </div>
         ) : (
@@ -174,8 +174,8 @@ const ChatInterface: React.FC = () => {
         
         {isTyping && (
           <div className="flex items-start gap-2 mb-4">
-            <Avatar className="h-8 w-8 border bg-zithara-100">
-              <AvatarFallback className="text-zithara-700 font-semibold">Z</AvatarFallback>
+            <Avatar className="h-8 w-8 border bg-blue-100">
+              <AvatarFallback className="text-blue-700 font-semibold">AI</AvatarFallback>
             </Avatar>
             <div className="bg-gray-200 dark:bg-gray-700 rounded-xl rounded-tl-none px-4 py-3 shadow-sm">
               <div className="typing-indicator">
@@ -192,12 +192,12 @@ const ChatInterface: React.FC = () => {
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <Input
             type="text"
-            placeholder="Type your message..."
+            placeholder="Ask anything..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             className="flex-1"
           />
-          <Button type="submit" className="bg-zithara-500 hover:bg-zithara-600">
+          <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
             <Send size={18} />
           </Button>
         </form>

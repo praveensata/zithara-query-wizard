@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 interface ChatMessageProps {
@@ -18,20 +18,20 @@ const ChatMessageImproved: React.FC<ChatMessageProps> = ({ message, isUser, time
       isUser ? "justify-end" : "justify-start"
     )}>
       {!isUser && (
-        <Avatar className="h-8 w-8 border bg-zithara-100">
-          <span className="text-zithara-700 font-semibold">Z</span>
+        <Avatar className="h-8 w-8 border bg-blue-100">
+          <AvatarFallback className="text-blue-700 font-semibold">AI</AvatarFallback>
         </Avatar>
       )}
       
       <div className={cn(
         "max-w-[80%] rounded-xl px-4 py-2 shadow-sm",
-        isUser ? "chat-message-user rounded-tr-none" : "chat-message-bot rounded-tl-none"
+        isUser ? "bg-blue-500 text-white rounded-tr-none" : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-tl-none"
       )}>
         <div className="whitespace-pre-wrap">{message}</div>
         {timestamp && (
           <div className={cn(
             "text-xs mt-1 text-right",
-            isUser ? "text-zithara-100" : "text-gray-500 dark:text-gray-400"
+            isUser ? "text-blue-100" : "text-gray-500 dark:text-gray-400"
           )}>
             {formattedTime}
           </div>
@@ -39,8 +39,8 @@ const ChatMessageImproved: React.FC<ChatMessageProps> = ({ message, isUser, time
       </div>
       
       {isUser && (
-        <Avatar className="h-8 w-8 border bg-zithara-50">
-          <span className="text-zithara-700 font-semibold">U</span>
+        <Avatar className="h-8 w-8 border bg-blue-50">
+          <AvatarFallback className="text-blue-700 font-semibold">You</AvatarFallback>
         </Avatar>
       )}
     </div>
