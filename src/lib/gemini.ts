@@ -24,14 +24,14 @@ export interface GeminiResponse {
 const sampleProducts = [
   {
     id: "phone1",
-    name: "ZitharaPhone Pro Max",
+    name: "iPhone Pro Max",
     price: 999,
     description: "The latest smartphone with advanced AI capabilities and 5G connectivity.",
     category: "mobile"
   },
   {
     id: "laptop1",
-    name: "ZitharaBook Air",
+    name: "MacBook Air",
     price: 1299,
     description: "Ultra-lightweight laptop with powerful processing and all-day battery life.",
     category: "laptop"
@@ -114,7 +114,7 @@ export const getChatResponse = async (query: string, apiKey: string) => {
     // In a real implementation, you would make an API call to Gemini
 
     // Check if we have a proper API key
-    if (!apiKey || apiKey === "YOUR_API_KEY") {
+    if (!apiKey || apiKey === "AIzaSyD1lQqLhc9afbc6MXEDF1u73Wx-uaOqP9M") {
       // Generate context-aware responses without API
       const context = generateContext(query);
       
@@ -122,7 +122,7 @@ export const getChatResponse = async (query: string, apiKey: string) => {
         // Use context to generate a meaningful response
         if (query.toLowerCase().includes("phone") || query.toLowerCase().includes("mobile")) {
           return {
-            text: "I found the ZitharaPhone Pro Max which costs $999. It's our latest smartphone with advanced AI capabilities and 5G connectivity. Would you like more details about this product?"
+            text: "I found the Phone Pro Max which costs $999. It's our latest smartphone with advanced AI capabilities and 5G connectivity. Would you like more details about this product?"
           };
         } else if (query.toLowerCase().includes("laptop")) {
           return {
