@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveChatMessage, getUserChatHistory } from '@/lib/firebase';
@@ -15,6 +14,14 @@ interface ChatMessage {
   message: string;
   isUser: boolean;
   timestamp?: any;
+}
+
+interface FirebaseChatMessage {
+  id: string;
+  message?: string;
+  isUser?: boolean;
+  timestamp?: any;
+  [key: string]: any;
 }
 
 const ChatInterface: React.FC = () => {
@@ -34,11 +41,10 @@ const ChatInterface: React.FC = () => {
           const history = await getUserChatHistory(currentUser.uid);
           
           if (Array.isArray(history)) {
-            // Format the chat history correctly
-            const formattedHistory = history.map(item => ({
+            const formattedHistory = history.map((item: FirebaseChatMessage) => ({
               id: item.id,
-              message: item.message,
-              isUser: item.isUser,
+              message: item.message || '',
+              isUser: item.isUser || false,
               timestamp: item.timestamp
             }));
             
@@ -106,7 +112,6 @@ const ChatInterface: React.FC = () => {
     setIsTyping(true);
     
     try {
-      // We no longer need to pass an API key, it's handled in the getChatResponse function
       const response = await getChatResponse(userMessage.message);
       
       setIsTyping(false);
