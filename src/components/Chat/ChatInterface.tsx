@@ -1,12 +1,13 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveChatMessage, getUserChatHistory } from '@/lib/firebase';
 import { getChatResponse } from '@/lib/gemini';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Send } from 'lucide-react';
-import ChatMessage from './ChatMessage';
+import ChatMessageImproved from './ChatMessageImproved';
 import { useToast } from '@/components/ui/use-toast';
 
 interface ChatMessage {
@@ -112,7 +113,9 @@ const ChatInterface: React.FC = () => {
     setIsTyping(true);
     
     try {
-      const response = await getChatResponse(userMessage.message);
+      // Use the provided API key for this request
+      const apiKey = "AIzaSyD1lQqLhc9afbc6MXEDF1u73Wx-uaOqP9M";
+      const response = await getChatResponse(userMessage.message, apiKey);
       
       setIsTyping(false);
       
@@ -160,7 +163,7 @@ const ChatInterface: React.FC = () => {
           </div>
         ) : (
           chatHistory.map((chat, index) => (
-            <ChatMessage
+            <ChatMessageImproved
               key={chat.id || index}
               message={chat.message}
               isUser={chat.isUser}
@@ -172,7 +175,7 @@ const ChatInterface: React.FC = () => {
         {isTyping && (
           <div className="flex items-start gap-2 mb-4">
             <Avatar className="h-8 w-8 border bg-zithara-100">
-              <span className="text-zithara-700 font-semibold">Z</span>
+              <AvatarFallback className="text-zithara-700 font-semibold">Z</AvatarFallback>
             </Avatar>
             <div className="bg-gray-200 dark:bg-gray-700 rounded-xl rounded-tl-none px-4 py-3 shadow-sm">
               <div className="typing-indicator">

@@ -1,6 +1,5 @@
 
 // We'll use Google's Gemini API for generating responses
-// This is a placeholder implementation until you provide the actual API key
 
 // Types for Gemini API
 export interface GeminiMessage {
@@ -107,58 +106,28 @@ const generateContext = (query: string) => {
   return context;
 };
 
-// Default API key for Gemini API
-const DEFAULT_API_KEY = "AIzaSyD1lQqLhc9afbc6MXEDF1u73Wx-uaOqP9M";
-
-// Enhanced Gemini API call that uses the provided API key or falls back to the default
+// Enhanced Gemini API call using internet search capabilities
 export const getChatResponse = async (query: string, apiKey?: string) => {
   try {
-    // Use provided API key or fall back to default
-    const key = apiKey || DEFAULT_API_KEY;
+    const key = apiKey || "";
     
-    // Generate context-aware responses
-    const context = generateContext(query);
-    
-    // For specific queries that we can answer with our predefined data
-    if (context && (key === DEFAULT_API_KEY || !key)) {
-      if (query.toLowerCase().includes("phone") || query.toLowerCase().includes("mobile")) {
-        return {
-          text: "I found the iPhone Pro Max which costs $999. It's our latest smartphone with advanced AI capabilities and 5G connectivity. Would you like more details about this product?"
-        };
-      } else if (query.toLowerCase().includes("laptop")) {
-        return {
-          text: "We have the MacBook Air available for $1299. It's an ultra-lightweight laptop with powerful processing and all-day battery life. Can I provide any specific information about it?"
-        };
-      } else if (query.toLowerCase().includes("refund") || query.toLowerCase().includes("return")) {
-        return {
-          text: "Zithara offers a 30-day money-back guarantee on all products. Returns must be in original packaging. Is there a specific product you're considering returning?"
-        };
-      } else if (query.toLowerCase().includes("shipping")) {
-        return {
-          text: "We offer free shipping on orders over $50. Standard delivery takes 3-5 business days. Would you like to know the status of a specific order?"
-        };
-      }
-    }
-    
-    // Default responses for common queries
-    if ((key === DEFAULT_API_KEY || !key) && (query.toLowerCase().includes("hello") || query.toLowerCase().includes("hi"))) {
-      return {
-        text: "Hello! Welcome to Zithara customer support. How can I help you today?"
-      };
-    } else if ((key === DEFAULT_API_KEY || !key) && query.toLowerCase().includes("help")) {
-      return {
-        text: "I'm here to help! I can provide information about our products, answer questions about orders, shipping, returns, and company policies. What would you like to know about?"
-      };
-    }
-
-    // For when we have an API key that's not the default, make the actual API call
-    if (key && key !== DEFAULT_API_KEY) {
+    // Always make an actual API call if we have a valid key
+    if (key) {
+      // Define the Google Gemini API endpoint
       const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
       
-      // Create system prompt with context
-      const systemPrompt = `You are a helpful AI assistant for Zithara.ai. Provide concise, accurate information about products, refunds, shipping, and company policies. Use a professional, friendly tone. If you're unsure about something, say that you need to check with a human representative. Here is relevant information to help you respond: ${context}`;
+      // Create system prompt with context and instructions to use internet
+      const systemPrompt = `You are a helpful AI assistant for Zithara.ai. Provide concise, accurate information about products, refunds, shipping, and company policies. 
+      Use a professional, friendly tone. If you're unsure about something, use your internet search capability to find the answer.
+      For current date or time questions, use the actual current date/time.
+      For company related information, focus on:
+      ${generateContext(query)}
       
-      const messages: GeminiMessage[] = [
+      When searching the internet for information, confirm that the information is accurate and up-to-date. 
+      Search for the most relevant results before answering.`;
+      
+      // Prepare messages for the API call
+      const messages = [
         {
           role: "user",
           parts: [{ text: systemPrompt }]
@@ -183,24 +152,108 @@ export const getChatResponse = async (query: string, apiKey?: string) => {
             topK: 40,
             topP: 0.95,
             maxOutputTokens: 1024
-          }
+          },
+          // Enable internet search capability
+          tools: [{
+            googleSearch: {}
+          }],
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
         })
       });
       
       if (!response.ok) {
         console.error("API response not OK:", response.status);
+        const errorText = await response.text();
+        console.error("API error details:", errorText);
         throw new Error(`API call failed with status: ${response.status}`);
       }
       
-      const data = await response.json() as GeminiResponse;
+      const data = await response.json();
+      
+      if (data.candidates && data.candidates.length > 0 && 
+          data.candidates[0].content && 
+          data.candidates[0].content.parts && 
+          data.candidates[0].content.parts.length > 0) {
+            
+        return {
+          text: data.candidates[0].content.parts[0].text
+        };
+      } else {
+        console.error("Unexpected API response format:", data);
+        return {
+          text: "I apologize, but I couldn't generate a response. Please try asking your question differently."
+        };
+      }
+    }
+    
+    // Fallback responses if no API key is provided
+    if (query.toLowerCase().includes("date") || query.toLowerCase().includes("time")) {
+      const now = new Date();
       return {
-        text: data.candidates[0]?.content.parts[0].text || "Sorry, I couldn't generate a response. Please try again."
+        text: `Today's date is ${now.toLocaleDateString()} and the current time is ${now.toLocaleTimeString()}.`
       };
     }
     
-    // Fallback for when we don't have a match or API key
+    if (query.toLowerCase().includes("hello") || query.toLowerCase().includes("hi") || query.toLowerCase().includes("hlo") || query.toLowerCase().includes("hii")) {
+      return {
+        text: "Hello! Welcome to Zithara customer support. How can I help you today?"
+      };
+    }
+    
+    if (query.toLowerCase().includes("help")) {
+      return {
+        text: "I'm here to help! I can provide information about our products, answer questions about orders, shipping, returns, and company policies. What would you like to know about?"
+      };
+    }
+    
+    if (query.toLowerCase().includes("store policy") || query.toLowerCase().includes("policies")) {
+      return {
+        text: "Zithara offers a 30-day money-back guarantee on all products. Returns must be in original packaging. We also provide free shipping on orders over $50, with standard delivery taking 3-5 business days. All our products come with a 1-year limited warranty covering manufacturing defects. Would you like more specific information about any of these policies?"
+      };
+    }
+    
+    if (query.toLowerCase().includes("offers") || query.toLowerCase().includes("promotions") || query.toLowerCase().includes("discount")) {
+      return {
+        text: "We currently have several promotions running! These include 15% off all smartphones when you trade in your old device, free premium headphones with any laptop purchase, and a buy-one-get-one 50% off deal on all accessories. Would you like more details about any specific offer?"
+      };
+    }
+    
+    if (query.toLowerCase().includes("laptop") || query.toLowerCase().includes("macbook")) {
+      return {
+        text: "We have the MacBook Air available for $1299. It's an ultra-lightweight laptop with powerful processing and all-day battery life. Features include a stunning Retina display, the latest M2 chip, and up to 18 hours of battery life. Would you like more details about specifications, available configurations, or accessories?"
+      };
+    }
+    
+    // Generate context-aware responses based on our sample data
+    const context = generateContext(query);
+    if (context) {
+      if (query.toLowerCase().includes("phone") || query.toLowerCase().includes("mobile")) {
+        return {
+          text: "I found the iPhone Pro Max which costs $999. It's our latest smartphone with advanced AI capabilities and 5G connectivity. Features include a 6.7-inch Super Retina XDR display, the A16 Bionic chip, a professional camera system with 48MP main camera, and all-day battery life. Would you like more details about this product?"
+        };
+      }
+    }
+    
+    // Fallback for when we don't have a match
     return {
-      text: `I understand you're asking about "${query}". Zithara offers cutting-edge technology products with a 30-day money-back guarantee and excellent customer support. For more specific information about your query, please provide more details.`
+      text: `I understand you're asking about "${query}". To provide you with the most accurate and up-to-date information, I'd need to access the internet. Please try again later when internet search is available, or ask about our products, return policy, shipping information, or other store policies that I can help with directly.`
     };
   } catch (error) {
     console.error("Error calling Gemini API:", error);
