@@ -1,10 +1,10 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveChatMessage, getUserChatHistory } from '@/lib/firebase';
 import { getChatResponse } from '@/lib/gemini';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Avatar } from '@/components/ui/avatar';
 import { Send } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import { useToast } from '@/components/ui/use-toast';
@@ -28,7 +28,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
 
-  // Load chat history when component mounts
   useEffect(() => {
     const loadChatHistory = async () => {
       if (currentUser) {
@@ -49,7 +48,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
     loadChatHistory();
   }, [currentUser, toast]);
 
-  // Scroll to bottom when chat history updates
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -69,7 +67,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
       return;
     }
 
-    // Add user message to chat
     const userMessage: ChatMessage = {
       message: message.trim(),
       isUser: true,
@@ -78,27 +75,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
     
     setChatHistory(prev => [...prev, userMessage]);
     
-    // Save user message to Firebase
     try {
       await saveChatMessage(currentUser.uid, userMessage.message, true);
     } catch (error) {
       console.error("Error saving user message:", error);
     }
     
-    // Clear input
     setMessage('');
     
-    // Show typing indicator
     setIsTyping(true);
     
     try {
-      // Get response from Gemini API
       const response = await getChatResponse(userMessage.message, apiKey);
       
-      // Hide typing indicator
       setIsTyping(false);
       
-      // Add AI response to chat
       const botMessage: ChatMessage = {
         message: response.text,
         isUser: false,
@@ -107,7 +98,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ apiKey }) => {
       
       setChatHistory(prev => [...prev, botMessage]);
       
-      // Save bot message to Firebase
       if (currentUser) {
         await saveChatMessage(currentUser.uid, botMessage.message, false);
       }
