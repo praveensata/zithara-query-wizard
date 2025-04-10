@@ -27,12 +27,12 @@ import {
 // Your Firebase configuration will go here
 // You'll need to replace this with your actual Firebase config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // You'll provide this
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBSj1oJTJ24FdVELWKR-QAPpQ878-2hr_Y",
+  authDomain: "zithara-f0d45.firebaseapp.com",
+  projectId: "zithara-f0d45",
+  storageBucket: "zithara-f0d45.firebasestorage.app",
+  messagingSenderId: "615553539550",
+  appId: "1:615553539550:web:fc4b1dd023577192dad14f"
 };
 
 // Initialize Firebase
