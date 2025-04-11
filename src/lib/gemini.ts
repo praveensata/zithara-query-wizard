@@ -19,11 +19,6 @@ export interface GeminiResponse {
   }[];
 }
 
-// Function to generate context from query
-const generateContext = (query: string) => {
-  return "";
-};
-
 // Enhanced Gemini API call using internet search capabilities
 export const getChatResponse = async (query: string, apiKey?: string) => {
   try {
@@ -36,20 +31,15 @@ export const getChatResponse = async (query: string, apiKey?: string) => {
       
       // Create system prompt with context and instructions to use internet
       const systemPrompt = `You are a helpful AI assistant. Provide accurate, concise information on any topic. 
-      Your answers should be brief and to the point - prefer 2-3 short paragraphs at most.
-      Use a professional, friendly tone and informal language.
-      
-      For current date or time questions, use the actual current date/time.
-      
-      When searching the internet for information, confirm that the information is accurate and up-to-date.
-      Search for the most relevant results before answering.
-      
-      Important guidelines:
-      - Keep responses concise and to the point
-      - Always prioritize accuracy over verbosity
-      - Use simple language when possible
-      - When appropriate, organize information with bullet points
-      - Never make up information - if you don't know, say so`;
+
+Important guidelines:
+- Keep responses very brief - aim for 2-3 short paragraphs maximum
+- Use simple, clear language
+- Be friendly but professional
+- When providing information, prioritize accuracy and brevity
+- Organize information with bullet points when appropriate
+- Never make up information - if you don't know, say so
+- For current date/time questions, use the actual current date/time`;
       
       // Prepare messages for the API call
       const messages = [
@@ -63,7 +53,7 @@ export const getChatResponse = async (query: string, apiKey?: string) => {
         }
       ];
       
-      console.log("Making request to Gemini API with key:", key);
+      console.log("Making request to Gemini API");
       
       const response = await fetch(`${url}?key=${key}`, {
         method: "POST",
@@ -73,10 +63,10 @@ export const getChatResponse = async (query: string, apiKey?: string) => {
         body: JSON.stringify({
           contents: messages,
           generationConfig: {
-            temperature: 0.6,
+            temperature: 0.4, // Lower temperature for more concise responses
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 800 // Limiting token count for more concise responses
+            maxOutputTokens: 500 // Reduced token count for shorter responses
           },
           // Enable internet search capability
           tools: [{
@@ -136,7 +126,7 @@ export const getChatResponse = async (query: string, apiKey?: string) => {
       };
     }
     
-    if (query.toLowerCase().includes("hello") || query.toLowerCase().includes("hi") || query.toLowerCase().includes("hlo") || query.toLowerCase().includes("hii")) {
+    if (query.toLowerCase().includes("hello") || query.toLowerCase().includes("hi")) {
       return {
         text: "Hello! How can I help you today?"
       };
@@ -144,18 +134,18 @@ export const getChatResponse = async (query: string, apiKey?: string) => {
     
     if (query.toLowerCase().includes("help")) {
       return {
-        text: "I'm here to help! I can answer questions on a wide range of topics, provide explanations, offer suggestions, or just chat. What would you like to know about?"
+        text: "I'm here to help! I can answer questions on various topics, provide explanations, or just chat. What would you like to know about?"
       };
     }
     
     // Fallback for when we don't have a match
     return {
-      text: `I understand you're asking about "${query}". To provide you with the most accurate information, I'd need to access the internet. Please try again when internet search is available.`
+      text: `I understand you're asking about "${query}". To provide accurate information, I'd need to access the internet. Please try again when internet search is available.`
     };
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     return {
-      text: "I apologize, but I encountered an error processing your request. Please try again later."
+      text: "Sorry, I encountered an error processing your request. Please try again later."
     };
   }
 };

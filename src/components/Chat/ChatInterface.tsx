@@ -1,14 +1,15 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveChatMessage, getUserChatHistory } from '@/lib/firebase';
 import { getChatResponse } from '@/lib/gemini';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, Sparkles } from 'lucide-react';
-import ChatMessageImproved from './ChatMessageImproved';
 import { useToast } from '@/components/ui/use-toast';
+import ChatHistory from './ChatHistory';
+import ChatInput from './ChatInput';
+import TypingIndicator from './TypingIndicator';
+import LoadingState from './LoadingState';
+import EmptyChatState from './EmptyChatState';
+import ExampleQueryListener from './ExampleQueryListener';
 
 interface ChatMessage {
   id?: string;
@@ -26,64 +27,53 @@ interface FirebaseChatMessage {
 }
 
 const ChatInterface: React.FC = () => {
-  const [message, setMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
   const { currentUser } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadChatHistory = async () => {
-      if (currentUser) {
-        setIsLoading(true);
-        try {
-          const history = await getUserChatHistory(currentUser.uid);
+    loadChatHistory();
+  }, [currentUser]);
+
+  const loadChatHistory = async () => {
+    if (currentUser) {
+      setIsLoading(true);
+      try {
+        const history = await getUserChatHistory(currentUser.uid);
+        
+        if (Array.isArray(history)) {
+          const formattedHistory = history.map((item: FirebaseChatMessage) => ({
+            id: item.id,
+            message: item.message || '',
+            isUser: item.isUser || false,
+            timestamp: item.timestamp
+          }));
           
-          if (Array.isArray(history)) {
-            const formattedHistory = history.map((item: FirebaseChatMessage) => ({
-              id: item.id,
-              message: item.message || '',
-              isUser: item.isUser || false,
-              timestamp: item.timestamp
-            }));
-            
-            setChatHistory(formattedHistory);
-          } else {
-            console.error("Chat history is not an array:", history);
-            toast({
-              title: "Error",
-              description: "Failed to load chat history format. Please try again.",
-              variant: "destructive"
-            });
-          }
-        } catch (error) {
-          console.error("Error loading chat history:", error);
+          setChatHistory(formattedHistory);
+        } else {
+          console.error("Chat history is not an array:", history);
           toast({
             title: "Error",
-            description: "Failed to load chat history. Please try again.",
+            description: "Failed to load chat history format. Please try again.",
             variant: "destructive"
           });
-        } finally {
-          setIsLoading(false);
         }
+      } catch (error) {
+        console.error("Error loading chat history:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load chat history. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
       }
-    };
-
-    loadChatHistory();
-  }, [currentUser, toast]);
-
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [chatHistory]);
+  };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!message.trim()) return;
+  const handleSendMessage = useCallback(async (message: string) => {
     if (!currentUser) {
       toast({
         title: "Authentication Required",
@@ -93,8 +83,10 @@ const ChatInterface: React.FC = () => {
       return;
     }
 
+    if (isTyping) return; // Prevent multiple messages while waiting
+
     const userMessage: ChatMessage = {
-      message: message.trim(),
+      message: message,
       isUser: true,
       timestamp: new Date()
     };
@@ -107,8 +99,6 @@ const ChatInterface: React.FC = () => {
     } catch (error) {
       console.error("Error saving user message:", error);
     }
-    
-    setMessage('');
     
     setIsTyping(true);
     
@@ -141,66 +131,29 @@ const ChatInterface: React.FC = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [currentUser, isTyping, toast]);
+
+  if (isLoading) {
+    return <LoadingState />;
+  }
 
   return (
     <div className="flex flex-col h-full">
-      <div 
-        ref={chatContainerRef}
-        className="flex-1 overflow-y-auto p-4 chat-container"
-      >
-        {isLoading ? (
-          <div className="h-full flex flex-col items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <p className="mt-2 text-gray-500">Loading chat history...</p>
-          </div>
-        ) : chatHistory.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center">
-            <div className="text-3xl font-bold text-blue-500 mb-2">AI Assistant</div>
-            <p className="text-gray-500 max-w-md">
-              Ask me anything! I'm here to help with your questions and provide information on any topic.
-            </p>
-          </div>
-        ) : (
-          chatHistory.map((chat, index) => (
-            <ChatMessageImproved
-              key={chat.id || index}
-              message={chat.message}
-              isUser={chat.isUser}
-              timestamp={chat.timestamp ? new Date(chat.timestamp.seconds * 1000) : undefined}
-            />
-          ))
-        )}
-        
-        {isTyping && (
-          <div className="flex items-start gap-2 mb-4">
-            <Avatar className="h-8 w-8 border bg-blue-100">
-              <AvatarFallback className="text-blue-700 font-semibold">AI</AvatarFallback>
-            </Avatar>
-            <div className="bg-gray-200 dark:bg-gray-700 rounded-xl rounded-tl-none px-4 py-3 shadow-sm">
-              <div className="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <ExampleQueryListener onQuerySelected={handleSendMessage} />
+      
+      {chatHistory.length === 0 ? (
+        <EmptyChatState />
+      ) : (
+        <ChatHistory messages={chatHistory} />
+      )}
+      
+      {isTyping && <TypingIndicator />}
       
       <div className="p-4 border-t">
-        <form onSubmit={handleSendMessage} className="flex gap-2">
-          <Input
-            type="text"
-            placeholder="Ask anything..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="flex-1"
-          />
-          <Button type="submit" className="bg-blue-500 hover:bg-blue-600">
-            <Send size={18} />
-          </Button>
-        </form>
+        <ChatInput 
+          onSendMessage={handleSendMessage} 
+          isLoading={isTyping}
+        />
       </div>
     </div>
   );
