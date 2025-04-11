@@ -1,4 +1,3 @@
-
 // AI Assistant using Google's Gemini API
 
 // Types for Gemini API
@@ -39,7 +38,8 @@ Response guidelines:
 - Be friendly and professional in tone
 - Always prioritize accuracy over length
 - If you're unsure, acknowledge limitations
-- For current date/time, use actual current date/time information`;
+- For current date/time, use actual current date/time information
+- For business inquiries, respond in a professional, helpful manner`;
       
       // Prepare messages for the API call
       const messages = [
@@ -118,7 +118,39 @@ Response guidelines:
       }
     }
     
-    // Fallback responses if no API key is provided
+    // Fallback responses for common FAQ questions if no API key is provided
+    // Refund policy questions
+    if (query.toLowerCase().includes("refund") || query.toLowerCase().includes("return")) {
+      return {
+        text: "Our refund policy is designed with customer satisfaction in mind. You may return any unopened product within 30 days of purchase for a full refund. For opened products, we offer store credit within 14 days. Please contact our customer service team at support@company.com with your order number for assistance with processing your refund."
+      };
+    }
+    
+    // Transaction/order questions
+    if (query.toLowerCase().includes("order") || query.toLowerCase().includes("transaction") || 
+        query.toLowerCase().includes("payment") || query.toLowerCase().includes("shipping")) {
+      return {
+        text: "We process all orders within 1-2 business days. Once shipped, you'll receive a tracking number via email. Standard shipping takes 3-5 business days, while express shipping arrives within 1-2 business days. For questions about a specific order, please provide your order number and we'll be happy to check its status for you."
+      };
+    }
+    
+    // Company policy questions
+    if (query.toLowerCase().includes("policy") || query.toLowerCase().includes("privacy") || 
+        query.toLowerCase().includes("terms") || query.toLowerCase().includes("warranty")) {
+      return {
+        text: "Our company policies are designed to ensure transparency and trust. We maintain strict privacy standards, never sharing your information with third parties without consent. All products come with a standard 1-year warranty against manufacturing defects. For full details on our policies, please visit our website's Policy section or contact our customer service team."
+      };
+    }
+    
+    // Product stock/availability
+    if (query.toLowerCase().includes("stock") || query.toLowerCase().includes("availability") || 
+        query.toLowerCase().includes("in stock") || query.toLowerCase().includes("out of stock")) {
+      return {
+        text: "Our inventory is updated in real-time on our website. If an item is marked 'In Stock,' it's available for immediate shipping. For items marked 'Out of Stock,' you can sign up for notifications when they become available. If you're inquiring about a specific product, please provide the product name or ID, and I'll check its current availability status for you."
+      };
+    }
+    
+    // Other common fallbacks
     if (query.toLowerCase().includes("date") || query.toLowerCase().includes("time")) {
       const now = new Date();
       return {
